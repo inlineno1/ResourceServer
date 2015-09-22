@@ -1,0 +1,53 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.mysql.main.driverClassName}" />
+		<property name="url" value="${jdbc.mysql.main.url}" />
+		<property name="username" value="${jdbc.mysql.main.username}" />
+		<property name="password" value="${jdbc.mysql.main.password}" />
+		<property name="initialSize" value="5" />
+		<property name="maxTotal" value="10" />
+		<property name="maxIdle" value="10" />
+		<property name="minIdle" value="5" />
+		<property name="defaultAutoCommit" value="false" />
+		<property name="validationQuery" value="SELECT NOW()" />
+	</bean>
+	
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:mybatis-config.xml" />
+	</bean>
+	
+	<mybatis-spring:scan base-package="com.teiklr.api.**.mapper" factory-ref="sqlSessionFactory" />
+	
+	<!-- Transaction Advice -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="select*" read-only="true" propagation="SUPPORTS"/>
+			<tx:method name="print*" read-only="true" propagation="SUPPORTS"/>
+			<tx:method name="download*" read-only="true" propagation="SUPPORTS"/>
+			<tx:method name="get*" read-only="true" propagation="SUPPORTS"/>
+			<tx:method name="find*" read-only="true" propagation="SUPPORTS"/>
+			<tx:method name="*" timeout="10000" rollback-for="Throwable" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- Transaction AOP -->
+	<aop:config proxy-target-class="true">
+		<aop:pointcut id="serviceMethods" expression="execution(* com.teiklr.api.*..*Service.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethods" />
+	</aop:config>
+	
+</beans>

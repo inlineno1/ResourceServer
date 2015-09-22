@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teiklr.api.card.mapper.ArticleMapper">
+	
+	<select id="getArticleCount" resultType="int">
+		SELECT COUNT(*) 
+		FROM ARTICLE
+		WHERE PUBLISH_YN = 'Y' AND DELETE_YN = 'N'
+		<if test="type != null">
+		AND CATEGORY = #{type}  
+  		</if>
+	</select>
+	
+	<select id="getArticleList" resultType="com.teiklr.api.card.domain.Article">
+		SELECT 	ARTICLE_ID,
+			    CATEGORY,
+			    TITLE,
+			    CONTENT,
+			    CONTENT_SUMMARY,
+			    IMAGE_SUMMARY_URL,
+			    CREATE_DATE,
+			    CREATE_ID,
+			    CREATE_IP,
+			    UPDATE_DATE,
+			    UPDATE_ID,
+			    UPDATE_IP,
+			    PUBLISH_DATE,
+			    PUBLISH_ID,
+			    PUBLISH_IP,
+			    PUBLISH_YN,
+			    DELETE_YN
+		FROM ARTICLE
+		WHERE PUBLISH_YN = 'Y' AND DELETE_YN = 'N'
+		<if test="type != null">
+		AND CATEGORY = #{type}  
+  		</if>
+	</select>
+	
+	<select id="getArticle" resultType="com.teiklr.api.card.domain.Article">
+		SELECT 	ARTICLE_ID,
+			    CATEGORY,
+			    TITLE,
+			    CONTENT,
+			    CONTENT_SUMMARY,
+			    IMAGE_SUMMARY_URL,
+			    CREATE_DATE,
+			    CREATE_ID,
+			    CREATE_IP,
+			    UPDATE_DATE,
+			    UPDATE_ID,
+			    UPDATE_IP,
+			    PUBLISH_DATE,
+			    PUBLISH_ID,
+			    PUBLISH_IP,
+			    PUBLISH_YN,
+			    DELETE_YN
+		FROM ARTICLE
+		WHERE PUBLISH_YN = 'Y' AND DELETE_YN = 'N'
+		AND ARTICLE_ID = #{articleId}
+		<if test="type != null">
+		AND CATEGORY = #{type}  
+  		</if>
+	</select>
+	
+	<select id="getComment" resultType="com.teiklr.api.card.domain.Comment">
+		SELECT  C.COMMENT_ID,
+			    C.ARTICLE_ID,
+			    C.USER_ID,
+                U.USER_NAME,
+                U.PICTURE_URL,
+			    C.CONTENT,
+			    C.CREATE_DATE,
+			    C.CREATE_ID,
+			    C.CREATE_IP,
+			    C.UPDATE_DATE,
+			    C.UPDATE_ID,
+			    C.UPDATE_IP,
+			    C.DELETE_YN
+		FROM COMMENT AS C INNER JOIN USER U
+        ON C.USER_ID = U.USER_ID        
+		WHERE C.ARTICLE_ID = #{articleId}
+		LIMIT #{offset}, #{size}
+	</select>	
+	
+	<select id="getCommentCount" resultType="int">
+		SELECT COUNT(*)
+		FROM COMMENT
+		WHERE ARTICLE_ID = #{articleId}
+	</select>
+	
+	<select id="getLikeCount" resultType="int">
+		SELECT COUNT(*)
+		FROM LIKE_COUNT
+		WHERE ARTICLE_ID = #{articleId}
+	</select>
+	
+	<select id="getViewCount" resultType="int">
+		SELECT COUNT
+		FROM VIEW_COUNT
+		WHERE ARTICLE_ID = #{articleId}
+	</select>
+	
+	<select id="getUser" resultType="com.teiklr.api.card.domain.User">
+		SELECT  USER_ID,
+			    USER_TYPE_CODE,
+			    USER_NAME,
+			    PICTURE_URL,
+			    EMAIL,
+			    BIO
+		FROM USER
+		WHERE USER_ID = #{userId}
+	</select>
+	 
+</mapper>

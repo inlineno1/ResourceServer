@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<!-- properties load -->
+	<property resource="properties/common.properties" />
+
+	<!-- file logger -->
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${logger.home}/LOG_TEIKLR_RESOUCE.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${logger.home}/LOG_TEIKLR_RESOUCE.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>2</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- console logger -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</layout>
+	</appender>
+
+	<!-- logger level config -->
+
+	<!-- 1) sql logger config -->
+	<logger name="jdbc.sqlonly">
+		<level value="debug" />
+	</logger>
+
+<!-- 	<logger name="jdbc.sqltiming"> -->
+<!-- 		<level value="error" /> -->
+<!-- 	</logger> -->
+
+<!-- 	<logger name="jdbc.audit"> -->
+<!-- 		<level value="error" /> -->
+<!-- 	</logger> -->
+
+<!-- 	<logger name="jdbc.resultset"> -->
+<!-- 		<level value="error" /> -->
+<!-- 	</logger> -->
+
+	<!-- 2) spring framework logger config -->
+	<logger name="org.springframework">
+		<level value="debug" />
+	</logger>
+
+	<logger name="org.springframework.security">
+		<level value="debug" />
+	</logger>
+
+	<!-- 3) print logger level -->
+	<root level="debug">
+		<appender-ref ref="FILE" />
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>

@@ -1,0 +1,96 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+	xmlns:security="http://www.springframework.org/schema/security" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd
+		http://www.springframework.org/schema/security/oauth http://www.springframework.org/schema/security/spring-security-oauth.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+	
+	<security:global-method-security pre-post-annotations="enabled" proxy-target-class="true">
+		<security:expression-handler ref="oauthExpressionHandler" />
+	</security:global-method-security>
+	
+	<oauth:expression-handler id="oauthExpressionHandler" />
+	<oauth:web-expression-handler id="oauthWebExpressionHandler" />
+	
+	<!-- OAuth2 : Endpoint -->
+	<security:http use-expressions="true"  create-session="never" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager">
+	 
+		
+	
+		<security:anonymous enabled="false" />
+		<security:intercept-url pattern="/v1.0/**" access="hasRole('ROLE_USER')" />
+		<security:custom-filter ref="resourceServerFilter" before="PRE_AUTH_FILTER" />
+		<security:access-denied-handler ref="oauthAccessDeniedHandler" />
+	</security:http>
+
+	<bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+		<property name="realmName" value="dstest" />
+	</bean>
+	
+	<bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased" xmlns="http://www.springframework.org/schema/beans">
+		<constructor-arg>
+			<list>
+				<bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter" />
+				<bean class="org.springframework.security.access.vote.RoleVoter" />
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+<!-- 				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter" /> -->
+			</list>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="oauthAccessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler" />
+	
+	<!-- OAuth2 : Resource Server -->
+	<oauth:resource-server id="resourceServerFilter" resource-id="dstest" token-services-ref="tokenServices" />
+	
+	<!-- OAuth2 : Client -->
+	<bean id="clientDetails" class="org.springframework.security.oauth2.provider.client.JdbcClientDetailsService">
+		<constructor-arg name="dataSource" ref="dataSource" /> 
+	</bean>
+	
+	<!-- OAuth2 : Token -->
+	<bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+		<property name="tokenStore" ref="tokenStore" />
+		<property name="supportRefreshToken" value="true" />
+		<property name="clientDetailsService" ref="clientDetails" />
+		<property name="accessTokenValiditySeconds" value="10" />
+	</bean>
+	
+	<bean id="tokenStore" class="org.springframework.security.oauth2.provider.token.store.JdbcTokenStore">
+		<constructor-arg name="dataSource" ref="dataSource" />
+	</bean>
+	 
+	<!-- OAuth2 : Users -->
+	<security:authentication-manager>
+		<security:authentication-provider ref="daoAuthenticationProvider" />
+	</security:authentication-manager>
+	
+	<bean id="daoAuthenticationProvider" class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
+		<property name="userDetailsService" ref="jdbcUserService" />
+		<property name="passwordEncoder" ref="passwordEncoder" />
+	</bean>
+	
+	<bean id="jdbcUserService" class="org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+		<property name="usernameBasedPrimaryKey" value="true" />
+		<property name="enableAuthorities" value="true" />
+		<property name="enableGroups" value="false" />
+		<property name="authoritiesByUsernameQuery">
+			<value>
+				SELECT ?, 'ROLE_USER'
+			</value>
+		</property>
+	</bean>
+	 
+	<bean id="saltSource" class="org.springframework.security.authentication.dao.ReflectionSaltSource">
+		<property name="userPropertyToUse" value="passwordSalt" />
+	</bean>
+
+	<bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder">
+		<constructor-arg value="256" />
+		<property name="encodeHashAsBase64" value="true" />
+	</bean>
+	 
+</beans>
